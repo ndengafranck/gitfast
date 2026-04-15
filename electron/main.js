@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs   = require('fs');
 const { spawnSync } = require('child_process');
@@ -112,6 +113,18 @@ function createWindow() {
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+
+// Update checker
+autoUpdater.checkForUpdatesAndNotify();
+
+autoUpdater.on('update-available', () => {
+  mainWindow.webContents.send('update-available');
+});
+autoUpdater.on('update-downloaded', () => {
+  mainWindow.webContents.send('update-downloaded');
+});
+
+ipcMain.on('install-update', () => autoUpdater.quitAndInstall());
 
 ipcMain.on('window-minimize', () => mainWindow.minimize());
 ipcMain.on('window-maximize', () => mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize());
@@ -607,4 +620,54 @@ ipcMain.handle('gh-delete-release', async (_, { remoteUrl, pat, releaseId }) => 
     );
     return { ok: true };
   } catch (e) { return { ok: false, error: e.response?.data?.message || e.message }; }
+});
+
+// ── .gitignore Management ─────────────────────────────────────────────────────
+
+ipcMain.handle('gitignore-read', (_, { folder }) => {
+  try {
+    const p = path.join(folder, '.gitignore');
+    const content = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
+    return { ok: true, content };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+
+ipcMain.handle('gitignore-write', (_, { folder, content }) => {
+  try {
+    const p = path.join(folder, '.gitignore');
+    fs.writeFileSync(p, content, 'utf8');
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+
+ipcMain.handle('gitignore-detect-project', (_, { folder }) => {
+  try {
+    const files = fs.readdirSync(folder);
+    const detected = [];
+    // Node / JS
+    if (files.includes('package.json') || files.includes('node_modules')) detected.push('node');
+    // Python
+    if (files.some(f => f.endsWith('.py')) || files.includes('requirements.txt') || files.includes('Pipfile')) detected.push('python');
+    // Java
+    if (files.some(f => f.endsWith('.java')) || files.includes('pom.xml') || files.includes('build.gradle')) detected.push('java');
+    // .NET / C#
+    if (files.some(f => f.endsWith('.csproj') || f.endsWith('.sln'))) detected.push('dotnet');
+    // Rust
+    if (files.includes('Cargo.toml')) detected.push('rust');
+    // Go
+    if (files.includes('go.mod')) detected.push('go');
+    // Flutter / Dart
+    if (files.includes('pubspec.yaml')) detected.push('flutter');
+    // PHP
+    if (files.includes('composer.json')) detected.push('php');
+    // Ruby
+    if (files.includes('Gemfile')) detected.push('ruby');
+    // Xcode / Swift / iOS
+    if (files.some(f => f.endsWith('.xcodeproj') || f.endsWith('.xcworkspace'))) detected.push('xcode');
+    // Android
+    if (files.some(f => f === 'AndroidManifest.xml') || files.includes('gradle')) detected.push('android');
+    // General IDE / OS (always include)
+    detected.push('editors', 'os');
+    return { ok: true, detected };
+  } catch (e) { return { ok: false, error: e.message }; }
 });

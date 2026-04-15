@@ -52,4 +52,9 @@ contextBridge.exposeInMainWorld('gitfast', {
   ghListReleases: (a) => ipcRenderer.invoke('gh-list-releases', a),
   ghCreateRelease: (a) => ipcRenderer.invoke('gh-create-release', a),
   ghDeleteRelease: (a) => ipcRenderer.invoke('gh-delete-release', a),
+
+  // .gitignore management
+  gitignoreRead: (a) => ipcRenderer.invoke('gitignore-read', a),
+  gitignoreWrite: (a) => ipcRenderer.invoke('gitignore-write', a),
+  gitignoreDetectProject: (a) => ipcRenderer.invoke('gitignore-detect-project', a),
 });

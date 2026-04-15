@@ -15,11 +15,12 @@
     "electron": "electron ."
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "axios": "^1.6.0",
+    "chokidar": "^3.6.0",
     "electron-store": "^8.1.0",
-    "chokidar": "^3.6.0"
+    "electron-updater": "^6.8.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
@@ -31,7 +32,12 @@
   "build": {
     "appId": "com.gitfast.app",
     "productName": "GitFast",
-    "copyright": "Copyright © 2024 GitFast",
+    "copyright": "Copyright © 2026 GitFast",
+    "publish": {
+      "provider": "github",
+      "owner": "ndengafranck",
+      "repo": "gitfast"
+    },
     "files": [
       "dist/**/*",
       "electron/**/*",
@@ -47,7 +53,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.ico",

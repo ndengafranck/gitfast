@@ -20,7 +20,8 @@ const NAV = [
     { id: 'releases', icon: '◈', label: 'Releases' },
   ]},
   { group: 'Config', items: [
-    { id: 'settings', icon: '⚙', label: 'Settings' },
+    { id: 'gitignore', icon: '🚫', label: '.gitignore' },
+    { id: 'settings',  icon: '⚙',  label: 'Settings' },
   ]},
 ]
 

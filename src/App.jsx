@@ -13,6 +13,7 @@ import ActionsPanel from './components/ActionsPanel.jsx'
 import IssuesPanel from './components/IssuesPanel.jsx'
 import ReleasesPanel from './components/ReleasesPanel.jsx'
 import SettingsPanel from './components/SettingsPanel.jsx'
+import GitignorePanel from './components/GitignorePanel.jsx'
 import { useSettings } from './hooks/useSettings.js'
 import { useToast } from './hooks/useToast.js'
 import { useGitStatus } from './hooks/useGitStatus.js'
@@ -147,6 +148,7 @@ export default function App() {
       case 'actions':    return <ActionsPanel settings={settings} toast={toast} />
       case 'issues':     return <IssuesPanel settings={settings} toast={toast} />
       case 'releases':   return <ReleasesPanel settings={settings} toast={toast} />
+      case 'gitignore':  return <GitignorePanel folder={settings.defaultFolder} toast={toast} />
       case 'settings':   return <SettingsPanel settings={settings} onSave={handleSaveSettings} toast={toast} />
       default:           return null
     }
