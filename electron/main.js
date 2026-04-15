@@ -110,20 +110,38 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow);
+// ── App lifecycle ─────────────────────────────────────────────────────────────
+app.whenReady().then(() => {
+  createWindow();
+
+  // ── FIX: Auto-updater setup moved inside whenReady so mainWindow exists ──
+  // Skip update checks in dev mode to avoid noise
+  if (!isDev) {
+    autoUpdater.checkForUpdatesAndNotify();
+
+    autoUpdater.on('update-available', (info) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update-available', info.version);
+      }
+    });
+
+    autoUpdater.on('update-downloaded', (info) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update-downloaded', info.version);
+      }
+    });
+
+    autoUpdater.on('error', (err) => {
+      // Log silently — don't crash the app for update failures
+      console.error('[updater] error:', err.message);
+    });
+  }
+});
+
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
-// Update checker
-autoUpdater.checkForUpdatesAndNotify();
-
-autoUpdater.on('update-available', () => {
-  mainWindow.webContents.send('update-available');
-});
-autoUpdater.on('update-downloaded', () => {
-  mainWindow.webContents.send('update-downloaded');
-});
-
+// ── Updater IPC ───────────────────────────────────────────────────────────────
 ipcMain.on('install-update', () => autoUpdater.quitAndInstall());
 
 ipcMain.on('window-minimize', () => mainWindow.minimize());

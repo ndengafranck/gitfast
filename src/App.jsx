@@ -42,6 +42,11 @@ export default function App() {
   const [bridgeReady, setBridgeReady] = useState(!!window.gitfast)
   const [bridgeError, setBridgeError] = useState(null)
 
+  // ── FIX: Update notification state ────────────────────────────────────────
+  const [updateAvailable, setUpdateAvailable] = useState(false)
+  const [updateDownloaded, setUpdateDownloaded] = useState(false)
+  const [updateVersion, setUpdateVersion] = useState(null)
+
   // Wait for window.gitfast to be injected by Electron preload
   useEffect(() => {
     if (window.gitfast) { setBridgeReady(true); return }
@@ -56,6 +61,32 @@ export default function App() {
       refreshStatus(settings.defaultFolder)
     }
   }, [bridgeReady, loaded, settings.defaultFolder])
+
+  // ── FIX: Listen for auto-updater events from main process ─────────────────
+  useEffect(() => {
+    if (!bridgeReady || !window.gitfast) return
+
+    window.gitfast.onUpdateAvailable((version) => {
+      setUpdateAvailable(true)
+      setUpdateVersion(version)
+      toast(`Update v${version} is downloading in the background…`, 'info')
+    })
+
+    window.gitfast.onUpdateDownloaded((version) => {
+      setUpdateAvailable(false)
+      setUpdateDownloaded(true)
+      setUpdateVersion(version)
+    })
+
+    // Clean up listeners when component unmounts
+    return () => {
+      window.gitfast.removeUpdateListeners?.()
+    }
+  }, [bridgeReady])
+
+  const handleInstallUpdate = () => {
+    window.gitfast.installUpdate()
+  }
 
   const handleSaveSettings = useCallback(async (next) => {
     const merged = await saveSettings(next)
@@ -165,6 +196,52 @@ export default function App() {
         onPush={quickPush}
         onRefresh={() => refreshStatus(settings.defaultFolder)}
       />
+
+      {/* ── FIX: Update available banner (downloading) ── */}
+      {updateAvailable && !updateDownloaded && (
+        <div style={{
+          background: 'var(--accent)',
+          color: '#fff',
+          fontSize: 12,
+          padding: '6px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}>
+          <span>⬇️</span>
+          <span>GitFast v{updateVersion} is downloading in the background…</span>
+        </div>
+      )}
+
+      {/* ── FIX: Update ready banner (install prompt) ── */}
+      {updateDownloaded && (
+        <div style={{
+          background: '#1a7f3c',
+          color: '#fff',
+          fontSize: 12,
+          padding: '6px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <span>✅ GitFast v{updateVersion} is ready to install.</span>
+          <button
+            onClick={handleInstallUpdate}
+            style={{
+              background: '#fff',
+              color: '#1a7f3c',
+              border: 'none',
+              borderRadius: 4,
+              padding: '3px 12px',
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Restart & Install
+          </button>
+        </div>
+      )}
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <Sidebar
