@@ -3,6 +3,10 @@
   "version": "1.1.0",
   "description": "GitHub actions at the speed of a click",
   "main": "electron/main.js",
+  "author": {
+    "email": "ndengafranck771@gmail.com",
+    "name": "FRANCK SIMONET MOUAHANYE NDENGA"
+  },
   "scripts": {
     "dev": "concurrently -k -n VITE,ELECTRON -c cyan,yellow \"vite build --watch\" \"node electron/launch-dev.js\"",
     "build": "vite build",
