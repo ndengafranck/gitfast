@@ -4,7 +4,7 @@
 
 GitFast is a desktop app that lets developers perform all common Git/GitHub operations with zero command-line typing — just point, click, done.
 
-Get the .exe here: https://drive.google.com/file/d/1VQc338kgrClcjZD9Q8eu2I2pWXRhHN4H/view?usp=drive_link
+Get the .exe here: https://github.com/ndengafranck/gitfast/releases/download/v1.3.0/GitFast-Setup-1.3.0.exe
 ---
 
 ## 🚀 Quick Start
