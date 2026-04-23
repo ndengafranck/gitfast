@@ -1,16 +1,14 @@
 {
   "name": "gitfast",
-  "version": "1.1.1",
+  "version": "1.3.0",
   "description": "GitHub actions at the speed of a click",
   "main": "electron/main.js",
-  "author": {
-    "email": "ndengafranck771@gmail.com",
-    "name": "FRANCK SIMONET MOUAHANYE NDENGA"
-  },
+  "author": "FRANCK SIMONET MOUAHANYE NDENGA",
   "scripts": {
     "dev": "concurrently -k -n VITE,ELECTRON -c cyan,yellow \"vite build --watch\" \"node electron/launch-dev.js\"",
     "build": "vite build",
-    "dist": "vite build && electron-builder --win",
+    "dist": "vite build && electron-builder --win --publish always",
+    "dist:local": "vite build && electron-builder --win --publish never",
     "dist:mac": "vite build && electron-builder --mac",
     "dist:linux": "vite build && electron-builder --linux",
     "dist:all": "vite build && electron-builder --win --mac --linux",
@@ -63,7 +61,17 @@
         }
       ],
       "icon": "assets/icon.ico",
-      "artifactName": "GitFast-Setup-${version}.exe"
+      "artifactName": "GitFast-Setup-${version}.exe",
+      "publisherName": "GitFast Sarl",
+      "legalTrademarks": "GitFast is a trademark of GitFast Sarl",
+      "fileAssociations": [
+        {
+          "ext": "gitfast",
+          "name": "GitFast Workflow File",
+          "description": "GitFast workflow file",
+          "icon": "assets/icon.ico"
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
