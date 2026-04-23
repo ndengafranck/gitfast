@@ -58,14 +58,12 @@ contextBridge.exposeInMainWorld('gitfast', {
   gitignoreWrite: (a) => ipcRenderer.invoke('gitignore-write', a),
   gitignoreDetectProject: (a) => ipcRenderer.invoke('gitignore-detect-project', a),
 
-  // ── FIX: Auto-updater bridge ─────────────────────────────────────────────
-  // Listen for update-available event from main process
+  // Auto-updater bridge
   onUpdateAvailable: (cb) => ipcRenderer.on('update-available', (_event, version) => cb(version)),
-  // Listen for update-downloaded event from main process
   onUpdateDownloaded: (cb) => ipcRenderer.on('update-downloaded', (_event, version) => cb(version)),
-  // Tell main process to quit and install the downloaded update
   installUpdate: () => ipcRenderer.send('install-update'),
-  // Remove listeners when component unmounts (prevents memory leaks)
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  cancelUpdate: () => ipcRenderer.send('cancel-update'),
   removeUpdateListeners: () => {
     ipcRenderer.removeAllListeners('update-available');
     ipcRenderer.removeAllListeners('update-downloaded');

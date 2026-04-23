@@ -42,9 +42,8 @@ export default function App() {
   const [bridgeReady, setBridgeReady] = useState(!!window.gitfast)
   const [bridgeError, setBridgeError] = useState(null)
 
-  // ── FIX: Update notification state ────────────────────────────────────────
-  const [updateAvailable, setUpdateAvailable] = useState(false)
-  const [updateDownloaded, setUpdateDownloaded] = useState(false)
+  // Update state: null | 'prompt' | 'downloading' | 'ready' | 'dismissed'
+  const [updateState, setUpdateState] = useState(null)
   const [updateVersion, setUpdateVersion] = useState(null)
 
   // Wait for window.gitfast to be injected by Electron preload
@@ -62,27 +61,33 @@ export default function App() {
     }
   }, [bridgeReady, loaded, settings.defaultFolder])
 
-  // ── FIX: Listen for auto-updater events from main process ─────────────────
+  // Listen for auto-updater events from main process
   useEffect(() => {
     if (!bridgeReady || !window.gitfast) return
 
     window.gitfast.onUpdateAvailable((version) => {
-      setUpdateAvailable(true)
       setUpdateVersion(version)
-      toast(`Update v${version} is downloading in the background…`, 'info')
+      setUpdateState('prompt') // Show the "update now or later?" dialog
     })
 
     window.gitfast.onUpdateDownloaded((version) => {
-      setUpdateAvailable(false)
-      setUpdateDownloaded(true)
       setUpdateVersion(version)
+      setUpdateState('ready') // Download done — show install prompt
     })
 
-    // Clean up listeners when component unmounts
-    return () => {
-      window.gitfast.removeUpdateListeners?.()
-    }
+    return () => { window.gitfast.removeUpdateListeners?.() }
   }, [bridgeReady])
+
+  const handleUpdateNow = () => {
+    setUpdateState('downloading')
+    // Download starts automatically once update-available fires in electron-updater.
+    // Nothing extra to call — we just show the progress state.
+  }
+
+  const handleUpdateLater = () => {
+    window.gitfast.cancelUpdate?.()
+    setUpdateState('dismissed')
+  }
 
   const handleInstallUpdate = () => {
     window.gitfast.installUpdate()
@@ -186,7 +191,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', position: 'relative' }}>
       <Titlebar folder={settings.defaultFolder} branch={currentBranch} />
 
       <QuickBar
@@ -197,49 +202,107 @@ export default function App() {
         onRefresh={() => refreshStatus(settings.defaultFolder)}
       />
 
-      {/* ── FIX: Update available banner (downloading) ── */}
-      {updateAvailable && !updateDownloaded && (
+      {/* ── Update: "now or later?" prompt modal ── */}
+      {updateState === 'prompt' && (
         <div style={{
-          background: 'var(--accent)',
-          color: '#fff',
-          fontSize: 12,
-          padding: '6px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
+          position: 'absolute', inset: 0, zIndex: 999,
+          background: 'rgba(8,11,17,0.82)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <span>⬇️</span>
-          <span>GitFast v{updateVersion} is downloading in the background…</span>
+          <div style={{
+            background: 'var(--bg1)', border: '1px solid var(--border)',
+            borderRadius: 'var(--r-lg)', padding: '28px 32px', width: 360,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            display: 'flex', flexDirection: 'column', gap: 16,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 22 }}>⬆</span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
+                  GitFast v{updateVersion} is available
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                  A new version is ready to download.
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+              Would you like to download and install it now?
+              The update will download in the background while you keep working.
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                onClick={handleUpdateLater}
+                style={{
+                  padding: '7px 16px', borderRadius: 'var(--r)',
+                  border: '1px solid var(--border)', background: 'transparent',
+                  color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer',
+                  fontFamily: 'var(--font)',
+                }}
+              >
+                Later
+              </button>
+              <button
+                onClick={handleUpdateNow}
+                style={{
+                  padding: '7px 16px', borderRadius: 'var(--r)',
+                  border: '1px solid var(--accent)', background: 'var(--accent)',
+                  color: 'var(--bg0)', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  fontFamily: 'var(--font)',
+                }}
+              >
+                Download Now
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ── FIX: Update ready banner (install prompt) ── */}
-      {updateDownloaded && (
+      {/* ── Update: downloading in background banner ── */}
+      {updateState === 'downloading' && (
         <div style={{
-          background: '#1a7f3c',
-          color: '#fff',
-          fontSize: 12,
-          padding: '6px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          background: 'var(--bg3)', borderBottom: '1px solid var(--border)',
+          fontSize: 12, padding: '6px 16px',
+          display: 'flex', alignItems: 'center', gap: 8,
+          color: 'var(--text-muted)',
         }}>
-          <span>✅ GitFast v{updateVersion} is ready to install.</span>
-          <button
-            onClick={handleInstallUpdate}
-            style={{
-              background: '#fff',
-              color: '#1a7f3c',
-              border: 'none',
-              borderRadius: 4,
-              padding: '3px 12px',
-              fontSize: 11,
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
-            Restart & Install
-          </button>
+          <span style={{ color: 'var(--accent)', animation: 'spin .8s linear infinite', display: 'inline-block' }}>↻</span>
+          <span>Downloading GitFast v{updateVersion} in the background…</span>
+        </div>
+      )}
+
+      {/* ── Update: ready to install banner ── */}
+      {updateState === 'ready' && (
+        <div style={{
+          background: 'var(--green-bg)', borderBottom: '1px solid var(--green)',
+          fontSize: 12, padding: '6px 16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <span style={{ color: 'var(--green)' }}>✓ GitFast v{updateVersion} downloaded — ready to install.</span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => setUpdateState('dismissed')}
+              style={{
+                background: 'transparent', border: 'none',
+                color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer',
+                fontFamily: 'var(--font)',
+              }}
+            >
+              Later
+            </button>
+            <button
+              onClick={handleInstallUpdate}
+              style={{
+                background: 'var(--green)', color: 'var(--bg0)',
+                border: 'none', borderRadius: 4,
+                padding: '3px 12px', fontSize: 11,
+                fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'var(--font)',
+              }}
+            >
+              Restart & Install
+            </button>
+          </div>
         </div>
       )}
 

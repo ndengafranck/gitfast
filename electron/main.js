@@ -142,7 +142,17 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
 // ── Updater IPC ───────────────────────────────────────────────────────────────
-ipcMain.on('install-update', () => autoUpdater.quitAndInstall());
+ipcMain.on('install-update', () => autoUpdater.quitAndInstall(false, true));
+ipcMain.on('cancel-update', () => {
+  // electron-updater doesn't have a built-in cancel, but we can flag it
+  // so the update-downloaded event doesn't auto-install
+  try { autoUpdater.autoInstallOnAppQuit = false; } catch (_) {}
+});
+ipcMain.handle('check-for-updates', () => {
+  if (isDev) return { ok: false, error: 'Update checks disabled in dev mode.' };
+  try { autoUpdater.checkForUpdates(); return { ok: true }; }
+  catch (e) { return { ok: false, error: e.message }; }
+});
 
 ipcMain.on('window-minimize', () => mainWindow.minimize());
 ipcMain.on('window-maximize', () => mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize());

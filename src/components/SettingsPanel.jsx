@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Card, PanelHeader, Field, Input, Btn, BtnGroup, Row } from './UI.jsx'
 
+const APP_VERSION = '1.2.1'
+
 export default function SettingsPanel({ settings, onSave, toast }) {
   const [folder, setFolder] = useState(settings.defaultFolder || '')
   const [remote, setRemote] = useState(settings.defaultRemote || '')
@@ -9,10 +11,19 @@ export default function SettingsPanel({ settings, onSave, toast }) {
   const [ghUser, setGhUser] = useState(null)
   const [testing, setTesting] = useState(false)
   const [gitDiag, setGitDiag] = useState(null)
+  const [checkingUpdate, setCheckingUpdate] = useState(false)
+  const [updateStatus, setUpdateStatus] = useState(null) // 'checking' | 'up-to-date' | 'available' | 'downloaded'
 
-  // Check git binary on mount
   useEffect(() => {
     window.gitfast?.gitCheck().then(r => setGitDiag(r))
+
+    // Listen for update events triggered while Settings is open
+    window.gitfast?.onUpdateAvailable((version) => {
+      setUpdateStatus({ state: 'available', version })
+    })
+    window.gitfast?.onUpdateDownloaded((version) => {
+      setUpdateStatus({ state: 'downloaded', version })
+    })
   }, [])
 
   const pick = async () => {
@@ -39,12 +50,24 @@ export default function SettingsPanel({ settings, onSave, toast }) {
     }
   }
 
+  const checkUpdate = async () => {
+    setCheckingUpdate(true)
+    setUpdateStatus({ state: 'checking' })
+    const r = await window.gitfast?.checkForUpdates()
+    setCheckingUpdate(false)
+    if (!r?.ok) {
+      setUpdateStatus({ state: 'up-to-date' })
+      toast(r?.error || 'Already on the latest version.', 'info')
+    }
+    // If an update exists, the onUpdateAvailable listener above will fire
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
       <PanelHeader title="Settings" sub="Configure your workspace and GitHub authentication" />
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 26px' }}>
 
-        {/* ── Git Binary Status ── */}
+        {/* Git Binary Status */}
         {gitDiag && (
           <div style={{
             padding: '10px 14px', borderRadius: 'var(--r)',
@@ -69,7 +92,7 @@ export default function SettingsPanel({ settings, onSave, toast }) {
           </div>
         )}
 
-        {/* ── Workspace ── */}
+        {/* Workspace */}
         <Card title="Workspace" accent="◈">
           <Field label="Default Repo Folder" hint="GitFast will operate on this folder by default across all panels.">
             <Row>
@@ -84,7 +107,7 @@ export default function SettingsPanel({ settings, onSave, toast }) {
           </Field>
         </Card>
 
-        {/* ── GitHub Auth ── */}
+        {/* GitHub Auth */}
         <Card title="GitHub Authentication" accent="🔑">
           <Field
             label="Personal Access Token (PAT)"
@@ -94,7 +117,7 @@ export default function SettingsPanel({ settings, onSave, toast }) {
                 <a href="#" onClick={e => { e.preventDefault(); window.gitfast?.openExternal('https://github.com/settings/tokens') }}>
                   github.com/settings/tokens
                 </a>
-                {' '}— enable the <code>repo</code> scope. Required for push, pull, and PRs.
+                {' '}— enable the <code>repo</code> + <code>workflow</code> scopes.
               </span>
             }
           >
@@ -127,13 +150,64 @@ export default function SettingsPanel({ settings, onSave, toast }) {
           )}
         </Card>
 
-        {/* ── Quick-start guide ── */}
+        {/* Quick Start */}
         <Card title="Quick Start" accent="📋">
           <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.8 }}>
             <div><span style={{ color: 'var(--accent)' }}>1.</span> Set your <b>Default Repo Folder</b> and <b>Remote URL</b> above, then <b>Save Settings</b>.</div>
             <div><span style={{ color: 'var(--accent)' }}>2.</span> For a new project: go to <b>Init / Clone</b> → Init Repository.</div>
             <div><span style={{ color: 'var(--accent)' }}>3.</span> To push: go to <b>Stage & Commit</b> → Stage → Commit, then <b>Push</b>.</div>
             <div><span style={{ color: 'var(--accent)' }}>4.</span> PAT is required for Push, Pull, and Pull Requests on private repos.</div>
+          </div>
+        </Card>
+
+        {/* About & Updates */}
+        <Card title="About & Updates" accent="◎">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>GitFast</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Version {APP_VERSION} · by Ndenga Franck</div>
+            </div>
+            <Btn variant="secondary" onClick={checkUpdate} disabled={checkingUpdate}>
+              {checkingUpdate ? '⏳ Checking…' : '↻ Check for Updates'}
+            </Btn>
+          </div>
+
+          {/* Update status feedback */}
+          {updateStatus && (
+            <div style={{
+              padding: '10px 12px', borderRadius: 'var(--r)', fontSize: 12,
+              background: updateStatus.state === 'downloaded' ? 'var(--green-bg)'
+                        : updateStatus.state === 'available'  ? 'var(--accent-dim)'
+                        : updateStatus.state === 'up-to-date' ? 'var(--bg2)'
+                        : 'var(--bg2)',
+              border: `1px solid ${
+                updateStatus.state === 'downloaded' ? 'var(--green)'
+                : updateStatus.state === 'available' ? 'var(--accent)'
+                : 'var(--border)'
+              }`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+            }}>
+              <span style={{
+                color: updateStatus.state === 'downloaded' ? 'var(--green)'
+                     : updateStatus.state === 'available'  ? 'var(--accent)'
+                     : 'var(--text-muted)',
+              }}>
+                {updateStatus.state === 'checking'   && '⏳ Checking for updates…'}
+                {updateStatus.state === 'up-to-date' && '✓ You are on the latest version.'}
+                {updateStatus.state === 'available'  && `⬇ v${updateStatus.version} is downloading in the background…`}
+                {updateStatus.state === 'downloaded' && `✅ v${updateStatus.version} downloaded — restart to install.`}
+              </span>
+              {updateStatus.state === 'downloaded' && (
+                <Btn variant="primary" sm onClick={() => window.gitfast?.installUpdate()}>
+                  Restart & Install
+                </Btn>
+              )}
+            </div>
+          )}
+
+          <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-dim)' }}>
+            Updates are checked automatically on startup. When a new version is available,
+            it downloads silently in the background and you'll see a banner at the top of the app.
           </div>
         </Card>
 

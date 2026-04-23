@@ -1,0 +1,40 @@
+name: Build & Release GitFast
+
+on:
+  push:
+    tags:
+      - 'v*'         # Triggers on any tag like v1.2.1, v2.0.0, etc.
+
+permissions:
+  contents: write    # Needed to create GitHub Releases and upload assets
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build & publish Windows installer
+        env:
+          # GitHub token so electron-builder can upload to Releases
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run dist
+
+      # Upload the .exe as a build artifact too (optional backup)
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GitFast-Windows
+          path: release/*.exe
+          retention-days: 30
