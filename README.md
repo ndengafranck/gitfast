@@ -1,65 +1,94 @@
-# ⚡ GitFast
+⚡ GitFast – GitHub Desktop Client (No Command Line)
 
-> GitHub actions at the speed of a click. Built with Electron + React + Vite.
+«A fast and simple Git GUI built with Electron, React, and Vite.
+Perform Git and GitHub actions with a click — no terminal needed.»
 
-GitFast is a desktop app that lets developers perform all common Git/GitHub operations with zero command-line typing — just point, click, done.
-
-Get the .exe here: https://github.com/ndengafranck/gitfast/releases/download/v1.3.0/GitFast-Setup-1.3.0.exe
 ---
 
-## 🚀 Quick Start
+🚀 What is GitFast?
 
-### 1. Install dependencies
-```bash
+GitFast is a lightweight desktop application that allows developers to manage Git repositories and perform GitHub operations without using the command line.
+
+It is designed for:
+
+- Beginners who find Git CLI difficult
+- Developers who want faster workflows
+- Anyone looking for a simple GitHub desktop client
+
+---
+
+🔥 Features
+
+- ✅ Clone repositories
+- ✅ Commit changes
+- ✅ Push & Pull updates
+- ✅ Branch management
+- ✅ GitHub integration
+- ✅ Clean and modern UI (Electron + React)
+
+---
+
+💻 Download (Windows)
+
+👉 Download GitFast Setup:
+https://github.com/ndengafranck/gitfast/releases/tag/v1.3.0
+
+---
+
+🛠️ Built With
+
+- Electron
+- React
+- Vite
+- Node.js
+
+---
+
+🚀 Quick Start (Development)
+
+Install dependencies
+
 npm install
-```
 
-### 2. Run in development mode
-```bash
+Run the app
+
 npm run dev
-```
-This starts Vite on `localhost:5173` and launches Electron pointing to it.
 
-### 3. Build for production
-```bash
+Build for production
+
 npm run build
-```
-Output will be in the `release/` folder.
 
 ---
 
-## ⚙️ First-Time Setup
+📦 Keywords (for search engines)
 
-1. Open GitFast and click **⚙ Settings** in the sidebar
-2. Set **Default Repo Folder** — the local path to your Git project
-3. Set **Default Remote URL** — e.g. `https://github.com/username/repo.git`
-4. Paste your **GitHub PAT** — see below
-5. Click **Save Settings**, then **Test Connection**
+Git GUI, GitHub desktop client, Git without command line, Electron Git app, Git tool for beginners, GitHub UI tool
 
 ---
 
-## 🔑 Creating a GitHub PAT
+📌 Why GitFast?
 
-1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
-2. Click **Generate new token (classic)**
-3. Give it the **`repo`** scope
-4. Copy & paste into GitFast Settings
+Unlike traditional Git tools, GitFast focuses on:
+
+- Speed ⚡
+- Simplicity 🧠
+- Accessibility for beginners 🎯
 
 ---
 
-## ✨ Features
+⭐ Support
 
-| Panel | Actions |
-|---|---|
-| **Status** | Live file changes, staged count, branch info, commit log, remotes |
-| **Init / Clone** | `git init` + add remote, or `git clone` with PAT auth |
-| **Stage & Commit** | `git add` (all or specific), `git commit` |
-| **Push** | `git push` with PAT injection |
-| **Pull** | `git pull` with PAT injection |
-| **Branches** | Create, switch, delete, merge branches |
-| **Pull Requests** | List open PRs, create new PRs, merge via GitHub API |
-| **Quick Bar** | One-click Add All, Commit nav, Pull, Push, Refresh |
+If you like this project:
 
+- Star the repository ⭐
+- Share it on social media
+- Give feedback
+
+---
+
+📄 License
+
+NO License
 ---
 
 ## 🗂 Project Structure
