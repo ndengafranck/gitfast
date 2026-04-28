@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Card, PanelHeader, Field, Input, Btn, BtnGroup, Row } from './UI.jsx'
 
-const APP_VERSION = '1.2.1'
+const APP_VERSION = '1.3.0'
 
 export default function SettingsPanel({ settings, onSave, toast }) {
   const [folder, setFolder] = useState(settings.defaultFolder || '')
