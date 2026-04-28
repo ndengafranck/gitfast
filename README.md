@@ -137,3 +137,4 @@ gitfast/
 | GitHub API | axios |
 | Settings Storage | electron-store |
 | Dev Workflow | concurrently + wait-on |
+"dev Branch" 
